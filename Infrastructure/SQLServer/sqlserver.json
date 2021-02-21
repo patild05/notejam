@@ -1,0 +1,221 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "databaseMaxSizeGB": {
+            "type": "int",
+            "defaultValue": 1,
+            "allowedValues": [
+                1,
+                2,
+                5,
+                10
+            ],
+            "metadata": {
+                "description": "The maximum size, in GB, for the database."
+            }
+        },
+        "databaseName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+        },
+        "databasePerformanceLevel": {
+            "type": "string",
+            "defaultValue": "S0",
+            "allowedValues": [
+                "Basic",
+                "S0",
+                "S1",
+                "S2"
+            ],
+            "metadata": {
+                "description": "The service tier and performance level of the database."
+            }
+        },
+        "failoverGroup": {
+            "type": "string",
+            "defaultValue": "True",
+            "allowedValues": [
+                "False",
+                "True"
+            ],
+            "metadata": {
+                "description": "Specify if the SQL Server should make use of a failover group."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "allowedValues": [
+                "northeurope",
+                "westeurope"
+            ],
+            "metadata": {
+                "description": "The location of the resource."
+            }
+        },
+        "serverAdminLogin": {
+            "type": "string",
+            "minLength": 1
+        },
+        "serverAdminLoginPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The password must have at least eight characters and must contain characters from three of the following categories: uppercase letters, lowercase letters, numbers, and non-alphanumeric characters."
+            }
+        },
+        "serverName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 63,
+            "metadata": {
+                "description": "The server name can contain only lowercase letters, numbers, and '-', but can't start or end with '-' or have more than 63 characters."
+            }
+        }
+    },
+    "variables": {
+        "auditActionsAndGroups": [
+            "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+            "FAILED_DATABASE_AUTHENTICATION_GROUP",
+            "BATCH_COMPLETED_GROUP"
+        ],
+        "databaseServiceTier": {
+            "Basic": {
+                "databaseEdition": "Basic"
+            },
+            "S0": {
+                "databaseEdition": "Standard"
+            },
+            "S1": {
+                "databaseEdition": "Standard"
+            },
+            "S2": {
+                "databaseEdition": "Standard"
+            }
+        },
+        "failoverGroupName": "[uniqueString(concat(parameters('location'),'-failover'))]",
+        "retentionDays": 1095,
+        "partnerLocation": "[if(equals(parameters('location'), 'northeurope'), 'westeurope', 'northeurope')]",
+        "partnerServerName": "[concat(parameters('serverName'), '-partner')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2014-04-01-preview",
+            "type": "Microsoft.Sql/servers",
+            "name": "[parameters('serverName')]",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "[parameters('serverAdminLogin')]",
+                "administratorLoginPassword": "[parameters('serverAdminLoginPassword')]",
+                "version": "12.0"
+            },
+            "resources": [
+                {
+                    "condition": "[equals(parameters('failoverGroup'), 'True')]",
+                    "apiVersion": "2015-05-01-preview",
+                    "type": "failoverGroups",
+                    "name": "[variables('failoverGroupName')]",
+                    "dependsOn": [
+                        "[parameters('serverName')]",
+                        "[variables('partnerServerName')]",
+                        "[parameters('databaseName')]"
+                    ],
+                    "properties": {
+                        "serverName": "[parameters('serverName')]",
+                        "partnerServers": [
+                            {
+                                "id": "[resourceId('Microsoft.Sql/servers/', variables('partnerServerName'))]"
+                            }
+                        ],
+                        "readWriteEndpoint": {
+                            "failoverPolicy": "Automatic",
+                            "failoverWithDataLossGracePeriodMinutes": 60
+                        },
+                        "readOnlyEndpoint": {
+                            "failoverPolicy": "Disabled"
+                        },
+                        "databases": [
+                            "[resourceId('Microsoft.Sql/servers/databases', parameters('serverName'), parameters('databaseName'))]"
+                        ]
+                    }
+                },
+                {
+                    "apiVersion": "2017-03-01-preview",
+                    "type": "auditingSettings",
+                    "name": "DefaultAuditingSettings",
+                    "dependsOn": [
+                        "[parameters('serverName')]"
+                    ],
+                    "properties": {
+                        "state": "Disabled",
+                        "auditActionsAndGroups": "[variables('auditActionsAndGroups')]",
+                        "isAzureMonitorTargetEnabled": true
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2014-04-01-preview",
+            "type": "Microsoft.Sql/servers/databases",
+            "name": "[concat(parameters('serverName'), '/', parameters('databaseName'))]",
+            "dependsOn": [
+                "[parameters('serverName')]"
+            ],
+            "location": "[parameters('location')]",
+            "tags": {},
+            "properties": {
+                "collation": "SQL_Latin1_General_CP1_CI_AS",
+                "edition": "[variables('databaseServiceTier')[parameters('databasePerformanceLevel')]['databaseEdition']]",
+                "requestedServiceObjectiveName": "[parameters('databasePerformanceLevel')]"
+            },
+            "resources": [
+                {
+                    "type": "backupLongTermRetentionPolicies",
+                    "apiVersion": "2017-03-01-preview",
+                    "name": "default",
+                    "dependsOn": [
+                        "[parameters('databaseName')]"
+                    ],
+                    "properties": {
+                        "weeklyRetention": "P1M",
+                        "monthlyRetention": "P1Y",
+                        "yearlyRetention": "P3Y",
+                        "weekOfYear": 1
+                    }
+                },
+                {
+                    "type": "backupShortTermRetentionPolicies",
+                    "apiVersion": "2017-10-01-preview",
+                    "name": "default",
+                    "dependsOn": [
+                        "[parameters('databaseName')]"
+                    ],
+                    "properties": {
+                        "retentionDays": 35
+                    }
+                }
+            ]
+        },
+        {
+            "condition": "[equals(parameters('failoverGroup'), 'True')]",
+            "apiVersion": "2014-04-01-preview",
+            "type": "Microsoft.Sql/servers",
+            "name": "[variables('partnerServerName')]",
+            "location": "[variables('partnerLocation')]",
+            "tags": {},
+            "kind": "v12.0",
+            "properties": {
+                "administratorLogin": "[parameters('serverAdminLogin')]",
+                "administratorLoginPassword": "[parameters('serverAdminLoginPassword')]",
+                "version": "12.0"
+            },
+            "resources": []
+        }
+    ],
+    "outputs": {
+
+    }
+}

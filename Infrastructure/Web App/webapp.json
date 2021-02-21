@@ -1,0 +1,308 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "aadAppClientId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The Service Principal client ID of an existing AAD application."
+            }
+        },
+        "aadAppClientSecret": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The Service Principal client secret of the AAD application."
+            }
+        },
+        "appServicePlanInstanceCount": {
+            "type": "int",
+            "defaultValue": 1,
+            "minValue": 1,
+            "maxValue": 20,
+            "metadata": {
+                "description": "The number of workers for the App Service Plan."
+            }
+        },
+        "appServicePlanName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "metadata": {
+                "description": "The name of the App Service Plan."
+            }
+        },
+        "appServicePlanSkuName": {
+            "type": "string",
+            "defaultValue": "S1",
+            "allowedValues": [
+                "S1",
+                "S2",
+                "S3",
+                "P1v2",
+                "P2v2",
+                "P3v2"
+            ],
+            "metadata": {
+                "description": "The name of the App Service Plan SKU."
+            }
+        },
+        "applicationInsights": {
+            "type": "string",
+            "defaultValue": "Enabled",
+            "allowedValues": [
+                "Disabled",
+                "Enabled"
+            ],
+            "metadata": {
+                "description": "Whether to enable Application Insights."
+            }
+        },
+        "applicationInsightsName": {
+            "type": "string",
+            "defaultValue": "",
+            "maxLength": 255,
+            "metadata": {
+                "description": "The name of the Application Insights."
+            }
+        },
+        "appServiceKind": {
+            "type": "string",
+            "defaultValue": "app",
+            "allowedValues": [
+                "api",
+                "app",
+                "mobileapp"
+            ],
+            "metadata": {
+                "description": "The kind of resource."
+            }
+        },
+        "appServiceName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 60,
+            "metadata": {
+                "description": "The name of the App Service."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "allowedValues": [
+                "northeurope",
+                "westeurope"
+            ],
+            "metadata": {
+                "description": "The location of the resource."
+            }
+        },
+        "linuxRuntimeStack": {
+            "type": "string",
+            "defaultValue": "PYTHON|3.8",
+            "allowedValues": [
+                "PYTHON|3.8",
+                "node|10.10",
+                "php|7.2",
+                "dotnetcore|3.1"
+            ],
+            "metadata": {
+                "description": "The Linux runtime stack of the App Service."
+            }
+        },
+        "operatingSystem": {
+            "type": "string",
+            "defaultValue": "Linux",
+            "allowedValues": [
+                "Linux",
+                "Windows"
+            ],
+            "metadata": {
+                "description": "The Operating System of the App Service Plan."
+            }
+        },
+        "workload": {
+            "type": "string",
+            "defaultValue": "code",
+            "allowedValues": [
+                "code",
+                "container"
+            ],
+            "metadata": {
+                "description": "Specify type of workload"
+            }
+        }
+    },
+    "variables": {
+        "appServiceHostname": "[concat(parameters('appServiceName'), '.azurewebsites.net')]",
+        "appServicePlanSkuTier": {
+            "S1": "Standard",
+            "S2": "Standard",
+            "S3": "Standard",
+            "P1v2": "PremiumV2",
+            "P2v2": "PremiumV2",
+            "P3v2": "PremiumV2"
+        },
+        "serverFarmId": "[resourceId(resourceGroup().name, 'Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('appServicePlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "kind": "[parameters('operatingSystem')]",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "properties": {
+                "reserved": "[equals(parameters('operatingSystem'), 'Linux')]"
+            },
+            "sku": {
+                "name": "[parameters('appServicePlanSkuName')]",
+                "tier": "[variables('appServicePlanSkuTier')[parameters('appServicePlanSkuName')]]",
+                "capacity": "[parameters('appServicePlanInstanceCount')]"
+            }
+        },
+        {
+            "type": "microsoft.insights/autoscalesettings",
+            "apiVersion": "2014-04-01",
+            "name": "[concat(parameters('appServicePlanName'),'autoScaleRule')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('appServicePlanName'))]"
+            ],
+            "tags": {},
+            "properties": {
+                "profiles": [
+                    {
+                        "name": "Auto created scale condition",
+                        "capacity": {
+                            "minimum": "1",
+                            "maximum": "3",
+                            "default": "1"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "CpuPercentage",
+                                    "metricNamespace": "microsoft.web/serverfarms",
+                                    "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT10M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 70,
+                                    "dimensions": [],
+                                    "dividePerInstance": false
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT5M"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "enabled": true,
+                "targetResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]"
+            }
+        },
+        {
+            "name": "[parameters('appServiceName')]",
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-02-01",
+            "dependsOn": [
+                "[concat('Microsoft.Web/serverfarms/', parameters('appServicePlanName'))]"
+            ],
+            "location": "[parameters('location')]",
+            "tags": {},
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "kind": "[parameters('appServiceKind')]",
+            "properties": {
+                "name": "[parameters('appServiceName')]",
+                "siteConfig": {
+                    "linuxFxVersion": "[if(empty(parameters('linuxRuntimeStack')), if(equals(parameters('workload'), 'code'), json('null'), 'DOCKER|nginx'), parameters('linuxRuntimeStack'))]",
+                    "ftpsState": "FtpsOnly"
+                },
+                "serverFarmId": "[variables('serverFarmId')]",
+                "kind": "[parameters('appServiceKind')]",
+                "httpsOnly": true
+            }
+        },
+        {
+            "condition": "[not(equals(parameters('aadAppClientId'),''))]",
+            "name": "[concat(parameters('appServiceName'), '/authsettings')]",
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2018-02-01",
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', parameters('appServiceName'))]"
+            ],
+            "location": "[parameters('location')]",
+            "properties": {
+                "enabled": true,
+                "unauthenticatedClientAction": "RedirectToLoginPage",
+                "tokenStoreEnabled": true,
+                "defaultProvider": "AzureActiveDirectory",
+                "clientId": "[parameters('aadAppClientId')]",
+                "clientSecret": "[parameters('aadAppClientSecret')]",
+                "issuer": "[concat('https://sts.windows.net/', subscription().tenantId)]",
+                "allowedAudiences": [
+                    "[concat('https://', reference(resourceId('Microsoft.Web/sites', parameters('appServiceName'))).defaultHostName, '/.auth/login/aad/')]",
+                    "[concat('https://', variables('appServiceHostname'), '/.auth/login/aad/')]"
+                ],
+                "additionalLoginParams": [
+                    "domain_hint=notejam.com"
+                ],
+                "isAadAutoProvisioned": true
+            }
+        },
+        {
+            "condition": "[equals(parameters('applicationInsights'), 'Enabled')]",
+            "name": "[parameters('applicationInsightsName')]",
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2015-05-01",
+            "location": "[parameters('location')]",
+            "tags": {},
+            "kind": "web",
+            "properties": {
+                "ApplicationId": "[parameters('appServiceName')]",
+                "Application_Type": "web",
+                "Request_Source": "IbizaWebAppExtensionCreate"
+            }
+        },
+        {
+            "condition": "[equals(parameters('applicationInsights'), 'Enabled')]",
+            "name": "[concat(parameters('appServiceName'), '/appsettings')]",
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2018-02-01",
+            "dependsOn": [
+                "[concat('Microsoft.Insights/components/', parameters('applicationInsightsName'))]",
+                "[concat('Microsoft.Web/sites/', parameters('appServiceName'))]"
+            ],
+            "location": "[parameters('location')]",
+            "properties": {
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[if(equals(parameters('applicationInsights'), 'Enabled'), reference(resourceId('Microsoft.Insights/components/', parameters('applicationInsightsName')), '2015-05-01').InstrumentationKey, json('null'))]",
+                "XDT_MicrosoftApplicationInsights_Mode": "[if(equals(parameters('applicationInsights'), 'Enabled'), 'default', json('null'))]",
+                "ApplicationInsightsAgent_EXTENSION_VERSION": "~2"
+            }
+        }
+    ],
+    "outputs": {
+        "appServicePlanName": {
+            "type": "string",
+            "value": "[parameters('appServicePlanName')]"
+        },
+        "appServiceName": {
+            "type": "string",
+            "value": "[parameters('appServiceName')]"
+        },
+        "appServiceUlr": {
+            "type": "string",
+            "value": "[concat(parameters('appServiceName'),'.azurewebsites.net')]"
+        }
+    }
+}
