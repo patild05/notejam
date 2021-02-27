@@ -7,7 +7,7 @@ variables:
   agent_vmimage: "windows-latest"
   azure_subscription_connection: "ARM - TSE AZ Eng01"
   artifact_path: "Infrastructure"
-  artifact_name: "Infrastructure"
+  artifact_name: "notejam"
 
 pool:
   vmImage: $(agent_vmimage)
@@ -22,13 +22,13 @@ jobs:
     workspace:
       clean: outputs
 
-    steps:
+    steps:     
       - task: PublishPipelineArtifact@1
         displayName: 'Publish Pipeline Artifact'
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
-
+      
 
   # Deploy
   - job: deploy
@@ -42,14 +42,16 @@ jobs:
     steps:
     - checkout: none
 
-    - download: current
-      artifact: $(artifact_name)
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Pipeline Artifact'
+      inputs:
+        artifactName: $(artifact_name)
 
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
       enabled: true
       inputs:
         azureSubscription: $(azure_subscription_connection)
-        ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
-        ScriptArguments: '-ApplicationName note07 -Environment d -Location northeurope'
+        ScriptPath: '$(System.DefaultWorkingDirectory)/$(artifact_name)/main.ps1'
+        ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
         azurePowerShellVersion: LatestVersion
