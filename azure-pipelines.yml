@@ -76,10 +76,9 @@ jobs:
         targetPath: '$(Pipeline.Workspace)/$(artifact_path)'
 
     - powershell: |
-        $PSVersionTable
-        ls
         dir
-      
+        ls
+              
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
       enabled: false
