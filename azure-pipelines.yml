@@ -18,21 +18,20 @@ parameters:
   - name: location
     type: string
     displayName: "Choose Location"
-    default: 'northeurope'    
+    default: 'northeurope'
     values:
       - 'northeurope'
       - 'westeurope'
-  
+
   - name: service_connection
     type: string
     displayName: "Choose the service connection name, it has to be pre-configured in your Azure DevOps environment"
     default: "ARM - TSE AZ Eng01"
 
-trigger:
-- main
+trigger: none
 
 variables:
-  agent_vmimage: "windows-latest"    
+  agent_vmimage: "windows-latest"
   artifact_path: "Infrastructure"
   artifact_name: "Infrastructure"
 
@@ -49,13 +48,12 @@ jobs:
     workspace:
       clean: outputs
 
-    steps:     
+    steps:
       - task: PublishPipelineArtifact@1
         displayName: 'Publish Pipeline Artifact'
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
-      
 
   # Deploy
   - job: deploy
@@ -78,7 +76,7 @@ jobs:
     - powershell: |
         dir
         ls
-              
+
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
       enabled: false

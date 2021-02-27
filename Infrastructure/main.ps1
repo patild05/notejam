@@ -3,7 +3,7 @@ Param
 (
   [Parameter(Mandatory = $false)]
   [string]
-  $ApplicationName = "note06",
+  $ApplicationName = "note01",
 
   [Parameter(Mandatory = $false)]
   [string]
@@ -44,10 +44,6 @@ $locationAlias = switch ($resourceGroup.Location) {
 }
 
 $suffix = "01"
-Write-Information $PSScriptRoot -InformationAction Continue
-Write-Information (Join-Path -Path $PSScriptRoot -ChildPath '\SQLServer\sqlserver.json') -InformationAction Continue
-Write-Information (Join-Path -Path $PSScriptRoot -ChildPath '\Web App\webapp.json') -InformationAction Continue
-Write-Information (Join-Path -Path $PSScriptRoot -ChildPath '\Frontdoor\frontdoor.json') -InformationAction Continue
 
 try {
   Write-Information "INFO --- Create a Azure Sql." -InformationAction Continue
@@ -69,8 +65,6 @@ try {
     -serverAdminLoginPassword $secureServerAdminLoginPassword `
     -serverName $serverName `
     -Verbose
-    # -TemplateFile ".\Infrastructure\SQLServer\sqlserver.json"
-
 }
 catch {
   Write-Information -MessageData "INFO --- Sql Server deployment failed." -InformationAction Continue
@@ -93,7 +87,6 @@ try {
     -applicationInsightsName "$ApplicationName-$Environment-appinsights$suffix" `
     -appServiceName $primarySiteName `
     -Verbose
-    #-TemplateFile ".\Infrastructure\Web App\webapp.json" `
 
   $secondarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
@@ -106,7 +99,6 @@ try {
     -appServiceName $secondarySiteName `
     -location 'westeurope' `
     -Verbose
-
 }
 catch {
   Write-Information -MessageData "INFO --- Web App deployment failed." -InformationAction Continue
@@ -126,7 +118,6 @@ try {
     -frontDoorName "$ApplicationName-global-frntdoor$suffix" `
     -wafRPolicyName "wafPolicy$suffix" `
     -Verbose
-    #-TemplateFile ".\Infrastructure\Frontdoor\frontdoor.json" `
 }
 catch {
   Write-Information -MessageData "INFO --- App Service deployment failed." -InformationAction Continue
