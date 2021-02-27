@@ -52,6 +52,6 @@ jobs:
       enabled: true
       inputs:
         azureSubscription: $(azure_subscription_connection)
-        ScriptPath: '$(System.DefaultWorkingDirectory)/$(artifact_name)/main.ps1'
+        ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
         ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
         azurePowerShellVersion: LatestVersion
