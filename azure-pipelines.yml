@@ -6,15 +6,46 @@ trigger:
 variables:
   agent_vmimage: "windows-latest"
   azure_subscription_connection: "ARM - TSE AZ Eng01"
+  artifact_path: "https://github.com/patild05/notejam/tree/main/Infrastructure"
+  artifact_name: "notejam"
 
 pool:
   vmImage: $(agent_vmimage)
 
+# Jobs
+jobs:
+  # Publish Artifacts
+  - job: artifacts
+    pool:
+      vmImage: $(agent_vmimage)
+    continueOnError: false
+    workspace:
+      clean: outputs
+
+    steps:
+      - publish: $(artifact_path)
+        artifact: $(artifact_name)
+
+  # Deploy
+  - job: deploy
+    dependsOn: artifacts
+    pool:
+      vmImage: $(agent_vmimage)
+    continueOnError: false
+    workspace:
+      clean: outputs
+
+    steps:
+    - checkout: none
+
+    - download: current
+      artifact: $(artifact_name)
 steps:
 - task: AzurePowerShell@5
   displayName: 'Azure PowerShell script: FilePath'
+  enabled: false
   inputs:
     azureSubscription: $(azure_subscription_connection)
-    ScriptPath: '$(System.DefaultWorkingDirectory)/_patild05_notejam/Infrastructure/main.ps1'
+    ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
     ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
     azurePowerShellVersion: LatestVersion
