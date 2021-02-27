@@ -1,12 +1,38 @@
 name: $(TeamProject)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+parameters:
+  - name: appName
+    type: string
+    displayName: "Name of application"
+    default: "note01"
+
+  - name: environment
+    type: string
+    displayName: "Environment"
+    default: 'd'
+    values:
+      - 'd'
+      - 't'
+      - 'a'
+      - 'p'
+
+  - name: location
+    type: string
+    displayName: "Choose Location"
+    default: 'northeurope'    
+    values:
+      - 'northeurope'
+      - 'westeurope'
+  
+  - name: service_connection
+    type: string
+    displayName: "Choose the service connection name, it has to be pre-configured in your Azure DevOps environment"
+    default: "ARM - TSE AZ Eng01"
 
 trigger:
 - main
 
 variables:
-  agent_vmimage: "windows-latest"
-  agent_pool: "CCC-Hosted"
-  azure_subscription_connection: "ARM - TSE AZ Eng01"
+  agent_vmimage: "windows-latest"    
   artifact_path: "Infrastructure"
   artifact_name: "Infrastructure"
 
@@ -17,9 +43,8 @@ pool:
 jobs:
   # Publish Artifacts
   - job: artifacts
-    pool: $(agent_pool)
-    #pool:
-    #  vmImage: $(agent_vmimage)
+    pool:
+      vmImage: $(agent_vmimage)
     continueOnError: false
     workspace:
       clean: outputs
@@ -35,9 +60,8 @@ jobs:
   # Deploy
   - job: deploy
     dependsOn: artifacts
-    pool: $(agent_pool)
-    #pool:
-    #  vmImage: $(agent_vmimage)
+    pool:
+      vmImage: $(agent_vmimage)
     continueOnError: false
     workspace:
       clean: outputs
@@ -55,7 +79,7 @@ jobs:
       displayName: 'Azure PowerShell script: FilePath'
       enabled: true
       inputs:
-        azureSubscription: $(azure_subscription_connection)
+        azureSubscription: ${{parameters.service_connection}}
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
-        ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
+        ScriptArguments: '-ApplicationName ${{parameters.appName}} -Environment ${{parameters.environment}} -Location ${{parameters.location}}'
         azurePowerShellVersion: LatestVersion
