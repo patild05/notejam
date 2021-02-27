@@ -1,0 +1,20 @@
+name: $(TeamProject)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+- main
+
+variables:
+  agent_vmimage: "windows-latest"
+  azure_subscription_connection: "ARM - TSE AZ Eng01"
+
+pool:
+  vmImage: $(agent_vmimage)
+
+steps:
+- task: AzurePowerShell@5
+  displayName: 'Azure PowerShell script: FilePath'
+  inputs:
+    azureSubscription: $(azure_subscription_connection)
+    ScriptPath: '$(System.DefaultWorkingDirectory)/_patild05_notejam/Infrastructure/main.ps1'
+    ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
+    azurePowerShellVersion: LatestVersion
