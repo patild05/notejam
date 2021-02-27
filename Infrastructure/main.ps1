@@ -3,7 +3,7 @@ Param
 (
   [Parameter(Mandatory = $false)]
   [string]
-  $ApplicationName = "note07",
+  $ApplicationName = "note06",
 
   [Parameter(Mandatory = $false)]
   [string]
@@ -44,6 +44,10 @@ $locationAlias = switch ($resourceGroup.Location) {
 }
 
 $suffix = "01"
+Write-Information $PSScriptRoot -InformationAction Continue
+Write-Information (Join-Path -Path $PSScriptRoot -ChildPath '\SQLServer\sqlserver.json') -InformationAction Continue
+Write-Information (Join-Path -Path $PSScriptRoot -ChildPath '\Web App\webapp.json') -InformationAction Continue
+Write-Information (Join-Path -Path $PSScriptRoot -ChildPath '\Frontdoor\frontdoor.json') -InformationAction Continue
 
 try {
   Write-Information "INFO --- Create a Azure Sql." -InformationAction Continue
@@ -58,12 +62,14 @@ try {
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_sql_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\SQLServer\sqlserver.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\SQLServer\sqlserver.json") `
     -databaseName $ApplicationName `
     -serverAdminLogin $serverAdminLogin `
     -serverAdminLoginPassword $secureServerAdminLoginPassword `
     -serverName $serverName `
     -Verbose
+    # -TemplateFile ".\Infrastructure\SQLServer\sqlserver.json"
 
 }
 catch {
@@ -80,17 +86,20 @@ try {
   $primarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_webapp_ne_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Web App\webapp.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\Web App\webapp.json") `
     -aadAppClientSecret $secureServerAdminLoginPassword `
     -appServicePlanName "$ApplicationName-$Environment-ne-appplan$suffix" `
     -applicationInsightsName "$ApplicationName-$Environment-appinsights$suffix" `
     -appServiceName $primarySiteName `
     -Verbose
+    #-TemplateFile ".\Infrastructure\Web App\webapp.json" `
 
   $secondarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_webapp_we_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Web App\webapp.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\Web App\webapp.json") `
     -aadAppClientSecret $secureServerAdminLoginPassword `
     -appServicePlanName "$ApplicationName-$Environment-we-appplan$suffix" `
     -applicationInsightsName "$ApplicationName-$Environment-we-appinsights$suffix" `
@@ -110,12 +119,14 @@ try {
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_frontdoor_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Frontdoor\frontdoor.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\Frontdoor\frontdoor.json") `
     -backendpoolAddress1 "$primarySiteName.azurewebsites.net" `
     -backendpoolAddress2 "$secondarySiteName.azurewebsites.net" `
     -frontDoorName "$ApplicationName-global-frntdoor$suffix" `
     -wafRPolicyName "wafPolicy$suffix" `
     -Verbose
+    #-TemplateFile ".\Infrastructure\Frontdoor\frontdoor.json" `
 }
 catch {
   Write-Information -MessageData "INFO --- App Service deployment failed." -InformationAction Continue
