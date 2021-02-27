@@ -49,6 +49,7 @@ jobs:
       displayName: 'Download Pipeline Artifact'
       inputs:
         artifactName: $(artifact_name)
+        targetPath: '$(Pipeline.Workspace)/$(artifact_path)'
 
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
