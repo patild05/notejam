@@ -6,7 +6,7 @@ trigger:
 variables:
   agent_vmimage: "windows-latest"
   azure_subscription_connection: "ARM - TSE AZ Eng01"
-  artifact_path: "https://github.com/patild05/notejam/tree/main/Infrastructure"
+  artifact_path: "Infrastructure"
   artifact_name: "notejam"
 
 pool:
@@ -22,9 +22,13 @@ jobs:
     workspace:
       clean: outputs
 
-    steps:
-      - publish: $(artifact_path)
-        artifact: $(artifact_name)
+    steps:     
+      - task: PublishPipelineArtifact@1
+        displayName: 'Publish Pipeline Artifact'
+        inputs:
+          targetPath: $(artifact_path)
+          artifact: $(artifact_name)
+      
 
   # Deploy
   - job: deploy
