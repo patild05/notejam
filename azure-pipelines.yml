@@ -5,6 +5,7 @@ trigger:
 
 variables:
   agent_vmimage: "windows-latest"
+  agent_pool: "CCC-Hosted"
   azure_subscription_connection: "ARM - TSE AZ Eng01"
   artifact_path: "Infrastructure"
   artifact_name: "Infrastructure"
@@ -16,8 +17,9 @@ pool:
 jobs:
   # Publish Artifacts
   - job: artifacts
-    pool:
-      vmImage: $(agent_vmimage)
+    pool: $(agent_pool)
+    #pool:
+    #  vmImage: $(agent_vmimage)
     continueOnError: false
     workspace:
       clean: outputs
@@ -33,8 +35,9 @@ jobs:
   # Deploy
   - job: deploy
     dependsOn: artifacts
-    pool:
-      vmImage: $(agent_vmimage)
+    pool: $(agent_pool)
+    #pool:
+    #  vmImage: $(agent_vmimage)
     continueOnError: false
     workspace:
       clean: outputs
