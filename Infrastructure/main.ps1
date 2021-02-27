@@ -3,7 +3,7 @@ Param
 (
   [Parameter(Mandatory = $false)]
   [string]
-  $ApplicationName = "note01",
+  $ApplicationName = "note07",
 
   [Parameter(Mandatory = $false)]
   [string]
@@ -58,7 +58,7 @@ try {
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_sql_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\SQLServer\sqlserver.json" `
+    -Mode Incremental -TemplateFile ".\SQLServer\sqlserver.json" `
     -databaseName $ApplicationName `
     -serverAdminLogin $serverAdminLogin `
     -serverAdminLoginPassword $secureServerAdminLoginPassword `
@@ -80,7 +80,7 @@ try {
   $primarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_webapp_ne_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Web App\webapp.json" `
+    -Mode Incremental -TemplateFile ".\Web App\webapp.json" `
     -aadAppClientSecret $secureServerAdminLoginPassword `
     -appServicePlanName "$ApplicationName-$Environment-ne-appplan$suffix" `
     -applicationInsightsName "$ApplicationName-$Environment-appinsights$suffix" `
@@ -90,7 +90,7 @@ try {
   $secondarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_webapp_we_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Web App\webapp.json" `
+    -Mode Incremental -TemplateFile ".\Web App\webapp.json" `
     -aadAppClientSecret $secureServerAdminLoginPassword `
     -appServicePlanName "$ApplicationName-$Environment-we-appplan$suffix" `
     -applicationInsightsName "$ApplicationName-$Environment-we-appinsights$suffix" `
@@ -110,7 +110,7 @@ try {
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_frontdoor_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Frontdoor\frontdoor.json" `
+    -Mode Incremental -TemplateFile ".\Frontdoor\frontdoor.json" `
     -backendpoolAddress1 "$primarySiteName.azurewebsites.net" `
     -backendpoolAddress2 "$secondarySiteName.azurewebsites.net" `
     -frontDoorName "$ApplicationName-global-frntdoor$suffix" `

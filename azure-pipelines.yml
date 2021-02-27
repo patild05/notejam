@@ -22,13 +22,13 @@ jobs:
     workspace:
       clean: outputs
 
-    steps:     
+    steps:
       - task: PublishPipelineArtifact@1
         displayName: 'Publish Pipeline Artifact'
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
-      
+
 
   # Deploy
   - job: deploy
@@ -51,5 +51,5 @@ jobs:
       inputs:
         azureSubscription: $(azure_subscription_connection)
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
-        ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
+        ScriptArguments: '-ApplicationName note07 -Environment d -Location northeurope'
         azurePowerShellVersion: LatestVersion
