@@ -47,7 +47,7 @@ jobs:
 
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
-      enabled: false
+      enabled: true
       inputs:
         azureSubscription: $(azure_subscription_connection)
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
