@@ -7,7 +7,7 @@ variables:
   agent_vmimage: "windows-latest"
   azure_subscription_connection: "ARM - TSE AZ Eng01"
   artifact_path: "Infrastructure"
-  artifact_name: "notejam"
+  artifact_name: "Infrastructure"
 
 pool:
   vmImage: $(agent_vmimage)
