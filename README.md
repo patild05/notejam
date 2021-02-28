@@ -13,9 +13,9 @@ Rehost and modernize notejam application in Azure cloud.
 
 ## Current situation
 
-![Current Situation](/resources/currentsituation.png)
+![Current Situation](/Resources/currentsituation.png)
 
-#### Pain Points
+### Pain Points
 
 - Self managed infrasturcture e.g servers, firewall
 - User mangement
@@ -47,11 +47,11 @@ This design is based on **2nd approach**.
 
 For non-azure audience here is the overview of the solution
 
-![General Solution](/resources/laymanview.png)
+![General Solution](/Resources/laymanview.PNG)
 
 Here is the detailed technical diagram from MS Azure perspective
 
-![Azure Solution](/resources/technicaldiagram.png)
+![Azure Solution](/Resources/technicaldiagram.png)
 
 ### Design Considertaion
 
@@ -61,7 +61,7 @@ Here is the detailed technical diagram from MS Azure perspective
 
 3. **Bakcup/Distaster Recovery** - As mentioned above, the PaaS resources are fully managed which means Microsoft takes *frequent backups of database* as well. Currently, the *backups are scheduled daily, weekly and monhtly*. The *retention period is set to 3 years* which makes it possible to *restore the 3 years old note* in case of accidental deletion of records or other disasters.
 
-4. **Security** - The web applications are protected by *OSI Layer 7* security resource i.e. *Front Door*. Front door is configured with *WAF functionality* which helps to prevent various attacks like SQL injection, malicious BOT etc. Front door also act as an *global load balancer*. It enables *intelligent routing*. Intelligent meaning, it knows the preferred backend and can route maximum traffic (in this case 85%) to web app in primary region. In case of backend failure, all the traffic is routed to next available backend in this case failover web app.
+4. **Security** - The web applications are protected by *OSI Layer 7* security resource i.e. *Front Door*. Front door is configured with *WAF functionality* which helps to prevent various attacks like SQL injection, malicious BOT etc. Front door also act as an *global load balancer*. It enables *intelligent routing*. Intelligent meaning, it knows the preferred backend and can route maximum traffic (in this case 85%) to web app in primary region. In case of backend failure, all the traffic is routed to next available backend in this case failover web app. In addition to that, firewall rules on database server allow traffic originating from web application and effectively blocking any other access. Similary, web application has security configuration to allow traffic originating from Frontdoor endpoint and disabling the default host name.
 
 5. **Monitoring** - Application telemetry, traces, exceptions, logs are fully consumed in *App Insights* which can also be connected to *Log Analytics workspace*. App Insights can send various *alerts in case of exceptions or application availability issues*. SQL servers are connected to Log Analytics workspace which advertise various *metrics* information.The logs can be easily fetched by writing simple queries against log analytics
 
@@ -71,4 +71,11 @@ Here is the detailed technical diagram from MS Azure perspective
 
 8. **Administration** - At the resource group level, certain *tags are defined* which helps to *send the billing invoices to cost center*, to identify the application name for which the resources are provisioned and application owner.
 
-Check the Solution design presentation located at [Design Document](/Documentation/notejam.pptx){:target="_blank" rel="noopener"}
+Check the Solution design presentation located at [Design Document](/Documentation/notejam.pptx)
+
+## How do I deploy?
+
+There are two ways
+
+1. Impor the source code and yaml pipeline in Azure DevOps repo. Create the service connection from Azure DevOps to your Azure subscription. Execute the pipeline.
+2. The source code can be executed as a stand alone trigger. Execute the main.ps1 file. Either use default parameters or use your own.

@@ -7,7 +7,7 @@ parameters:
 
   - name: environment
     type: string
-    displayName: "Environment"
+    displayName: "Select Environment"
     default: 'd'
     values:
       - 'd'
@@ -17,7 +17,7 @@ parameters:
 
   - name: location
     type: string
-    displayName: "Choose Location"
+    displayName: "Select Location"
     default: 'northeurope'
     values:
       - 'northeurope'
@@ -25,8 +25,8 @@ parameters:
 
   - name: service_connection
     type: string
-    displayName: "Choose the service connection name, it has to be pre-configured in your Azure DevOps environment"
-    default: "ARM - TSE AZ Eng01"
+    displayName: "Enter the service connection name, it has to be pre-configured in your Azure DevOps environment."
+    default: "Your Azure service connection"
 
 trigger: none
 
