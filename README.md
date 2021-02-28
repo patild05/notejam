@@ -67,7 +67,7 @@ Here is the detailed technical diagram from MS Azure perspective
 
 6. **User Management** - This design makes use of *Azure Active Directory* for use management. With the use of AAD, application code is *free of handling user authentication and authorization*. All the users/groups from the organization can access the application with addtional overhead. The AAD comes with additional features such Single Sign-on, MFA.
 
-7. **Infrastructure as Code** - The deployment is *fully automated*. It consists of *yaml pipeline (CI/CD)* which can be run from *Azure DevOps* to provision the resources in Azure. The resources are grouped in a container called as *Resource Group*. The deployment can be rolled out to *D/T/A/P environment* without making any code change. The code can be executed locally in case there is no Azure DevOps environment. (Please exevcute main.ps1). The prerequisite is - a Azure subscription.
+7. **Infrastructure as Code** - The deployment is *fully automated*. It consists of *yaml pipeline (CI/CD)* which can be run from *Azure DevOps* to provision the resources in Azure. The resources are grouped in a container called as *Resource Group*. The deployment can be rolled out to *D/T/A/P environment* without making any code change. The code can be executed locally in case there is no Azure DevOps environment. (Please exevcute main.ps1). The prerequisite is - Azure subscription.
 
 8. **Administration** - At the resource group level, certain *tags are defined* which helps to *send the billing invoices to cost center*, to identify the application name for which the resources are provisioned and application owner.
 
