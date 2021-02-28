@@ -1,13 +1,39 @@
 name: $(TeamProject)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+parameters:
+  - name: appName
+    type: string
+    displayName: "Name of application"
+    default: "note01"
 
-trigger:
-- main
+  - name: environment
+    type: string
+    displayName: "Select Environment"
+    default: 'd'
+    values:
+      - 'd'
+      - 't'
+      - 'a'
+      - 'p'
+
+  - name: location
+    type: string
+    displayName: "Select Location"
+    default: 'northeurope'
+    values:
+      - 'northeurope'
+      - 'westeurope'
+
+  - name: service_connection
+    type: string
+    displayName: "Enter the service connection name, it has to be pre-configured in your Azure DevOps environment."
+    default: "Your Azure service connection"
+
+trigger: none
 
 variables:
   agent_vmimage: "windows-latest"
-  azure_subscription_connection: "ARM - TSE AZ Eng01"
   artifact_path: "Infrastructure"
-  artifact_name: "notejam"
+  artifact_name: "Infrastructure"
 
 pool:
   vmImage: $(agent_vmimage)
@@ -22,13 +48,12 @@ jobs:
     workspace:
       clean: outputs
 
-    steps:     
+    steps:
       - task: PublishPipelineArtifact@1
         displayName: 'Publish Pipeline Artifact'
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
-      
 
   # Deploy
   - job: deploy
@@ -42,14 +67,17 @@ jobs:
     steps:
     - checkout: none
 
-    - download: current
-      artifact: $(artifact_name)
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Pipeline Artifact'
+      inputs:
+        artifactName: $(artifact_name)
+        targetPath: '$(Pipeline.Workspace)/$(artifact_path)'
 
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
       enabled: true
       inputs:
-        azureSubscription: $(azure_subscription_connection)
+        azureSubscription: ${{parameters.service_connection}}
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
-        ScriptArguments: '-ApplicationName note09 -Environment d -Location northeurope'
+        ScriptArguments: '-ApplicationName ${{parameters.appName}} -Environment ${{parameters.environment}} -Location ${{parameters.location}}'
         azurePowerShellVersion: LatestVersion

@@ -58,13 +58,13 @@ try {
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_sql_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\SQLServer\sqlserver.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\SQLServer\sqlserver.json") `
     -databaseName $ApplicationName `
     -serverAdminLogin $serverAdminLogin `
     -serverAdminLoginPassword $secureServerAdminLoginPassword `
     -serverName $serverName `
     -Verbose
-
 }
 catch {
   Write-Information -MessageData "INFO --- Sql Server deployment failed." -InformationAction Continue
@@ -80,7 +80,8 @@ try {
   $primarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_webapp_ne_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Web App\webapp.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\Web App\webapp.json") `
     -aadAppClientSecret $secureServerAdminLoginPassword `
     -appServicePlanName "$ApplicationName-$Environment-ne-appplan$suffix" `
     -applicationInsightsName "$ApplicationName-$Environment-appinsights$suffix" `
@@ -90,14 +91,14 @@ try {
   $secondarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_webapp_we_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Web App\webapp.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\Web App\webapp.json") `
     -aadAppClientSecret $secureServerAdminLoginPassword `
     -appServicePlanName "$ApplicationName-$Environment-we-appplan$suffix" `
     -applicationInsightsName "$ApplicationName-$Environment-we-appinsights$suffix" `
     -appServiceName $secondarySiteName `
     -location 'westeurope' `
     -Verbose
-
 }
 catch {
   Write-Information -MessageData "INFO --- Web App deployment failed." -InformationAction Continue
@@ -110,7 +111,8 @@ try {
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
     -Name ($ApplicationName + "_frontdoor_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
-    -Mode Incremental -TemplateFile ".\Infrastructure\Frontdoor\frontdoor.json" `
+    -Mode Incremental `
+    -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\Frontdoor\frontdoor.json") `
     -backendpoolAddress1 "$primarySiteName.azurewebsites.net" `
     -backendpoolAddress2 "$secondarySiteName.azurewebsites.net" `
     -frontDoorName "$ApplicationName-global-frntdoor$suffix" `
