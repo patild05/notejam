@@ -1,0 +1,27 @@
+﻿@model notejamsinglepage.Models.PadViewModel
+
+@{
+    ViewBag.Title = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Pads Details</h2>
+
+<div>
+    <h4>PadViewModel</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Pad)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Pad)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Pad List", "Index")
+</p>

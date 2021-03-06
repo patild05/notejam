@@ -1,0 +1,27 @@
+﻿@model notejamsinglepage.Models.PadViewModel
+
+@{
+    ViewBag.Title = "Pads";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create Pad</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="container">
+        <div class="thirteen columns content-area">
+            <form class="pad">
+                <label for="name">Name</label>
+                @Html.EditorFor(model => model.Pad, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Pad, "", new { @class = "text-danger" })
+                <input type="submit" value="Save" class="btn-default">
+            </form>
+        </div>
+    </div><!-- container -->
+}
+
+    @section Scripts {
+        @Scripts.Render("~/bundles/jqueryval")
+    }

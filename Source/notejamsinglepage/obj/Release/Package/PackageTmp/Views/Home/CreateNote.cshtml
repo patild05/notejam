@@ -1,0 +1,22 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container">
+    <div class="thirteen columns content-area">
+        <form class="note">
+            <label for="name">Name</label>
+            <input type="text" id="name">
+            <label for="text">Note</label>
+            <textarea id="text"></textarea>
+            <label for="list">Select Pad</label>
+            <select id="list">
+                <option value="0">--------</option>
+                <option value="1">Business</option>
+                <option value="2">Personal</option>
+                <option value="3">Other</option>
+            </select>
+            <input type="submit" value="Save">
+        </form>
+    </div>    
+</div><!-- container -->
