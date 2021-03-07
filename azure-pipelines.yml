@@ -71,7 +71,7 @@ jobs:
 
   # Deploy
   - job: deploy_infrastructure_code
-    dependsOn: artifacts
+    dependsOn: publish_artifacts_infrastructure_code
     pool:
       vmImage: $(agent_vmimage)
     continueOnError: false
