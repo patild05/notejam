@@ -58,14 +58,17 @@ jobs:
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
+
       - task: NuGetToolInstaller@0
         displayName: 'Use NuGet 4.4.1'
         inputs:
           versionSpec: 4.4.1
+
       - task: NuGetCommand@2
         displayName: 'NuGet restore'
         inputs:
           restoreSolution: '**\*.sln'
+
       - task: VSBuild@1
         displayName: 'Build solution'
         inputs:
@@ -73,6 +76,7 @@ jobs:
           msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
           platform: '$(build_platform)'
           configuration: '$(build_configuration)'
+
       - task: PublishBuildArtifacts@1
         displayName: 'Publish Artifact'
         inputs:
@@ -102,8 +106,7 @@ jobs:
       displayName: 'Download code Artifact'
       inputs:
         artifactName: '$(code_artifact_name)'
-        downloadPath: '$(Pipeline.Workspace)/$(code_artifact_path)'
-        
+        downloadPath: '$(Pipeline.Workspace)/$(code_artifact_path)'        
 
     - task: AzurePowerShell@5
       displayName: 'Azure PowerShell script: FilePath'
@@ -113,3 +116,10 @@ jobs:
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
         ScriptArguments: '-ApplicationName ${{parameters.appName}} -Environment ${{parameters.environment}} -Location ${{parameters.location}}'
         azurePowerShellVersion: LatestVersion
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Azure App Service Deploy: notejamsinglepage'
+      inputs:
+        azureSubscription: ${{parameters.service_connection}}
+        WebAppName: notejamsinglepage20210307144600
+        packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'
