@@ -1,28 +1,5 @@
 name: $(TeamProject)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 parameters:
-  - name: appName
-    type: string
-    displayName: "Name of application"
-    default: "note01"
-
-  - name: environment
-    type: string
-    displayName: "Select Environment"
-    default: 'd'
-    values:
-      - 'd'
-      - 't'
-      - 'a'
-      - 'p'
-
-  - name: location
-    type: string
-    displayName: "Select Location"
-    default: 'northeurope'
-    values:
-      - 'northeurope'
-      - 'westeurope'
-
   - name: service_connection
     type: string
     displayName: "Enter the service connection name, it has to be pre-configured in your Azure DevOps environment."
@@ -31,13 +8,21 @@ parameters:
 trigger: none
 
 variables:
+  appName: "note01"
+  environment: "d"
+  location: "northeurope"
+
   agent_vmimage: "windows-latest"
+
   artifact_path: "Infrastructure"
   artifact_name: "Infrastructure"
   build_platform: "any cpu"
   build_configuration: "release"
   code_artifact_name: "notejamdrop"
   code_artifact_path: "notejamdrop"
+
+  primary_site_name: "$(appName)-public-tcni-$(environment)-ne-appservice01"
+  secondary_site_name: "$(appName)-public-tcni-$(environment)-we-appservice01"
 
 pool:
   vmImage: $(agent_vmimage)
@@ -110,16 +95,23 @@ jobs:
 
     - task: AzurePowerShell@5
       displayName: 'Create Infrastructure'
-      enabled: false
+      enabled: true
       inputs:
         azureSubscription: ${{parameters.service_connection}}
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
-        ScriptArguments: '-ApplicationName ${{parameters.appName}} -Environment ${{parameters.environment}} -Location ${{parameters.location}}'
+        ScriptArguments: '-ApplicationName $(appName) -Environment $(environment) -Location $(location)'
         azurePowerShellVersion: LatestVersion
 
     - task: AzureRmWebAppDeployment@4
       displayName: 'Azure App Service Deploy: notejam'
       inputs:
         azureSubscription: ${{parameters.service_connection}}
-        WebAppName: notejamsinglepage20210307152700
+        WebAppName: $(primary_site_name)
+        packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Azure App Service Deploy: notejam'
+      inputs:
+        azureSubscription: ${{parameters.service_connection}}
+        WebAppName: $(secondary_site_name)
         packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'

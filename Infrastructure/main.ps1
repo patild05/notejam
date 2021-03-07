@@ -47,7 +47,8 @@ $suffix = "01"
 
 try {
   Write-Information "INFO --- Create a Azure Sql." -InformationAction Continue
-  $serverName = ($ApplicationName + $locationAlias + $Environment + 'sql' + $suffix).ToLower()
+  $serverName = ($ApplicationName + 'jam' + $locationAlias + $Environment + 'sql2120121416prod').ToLower()
+  $databaseName = 'notejamproduction'
   $serverAdminLogin = 'sqladmin'
 
   # Generate server admin login password and store in Key Vault
@@ -60,7 +61,7 @@ try {
     -Name ($ApplicationName + "_sql_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
     -Mode Incremental `
     -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\SQLServer\sqlserver.json") `
-    -databaseName $ApplicationName `
+    -databaseName $databaseName `
     -serverAdminLogin $serverAdminLogin `
     -serverAdminLoginPassword $secureServerAdminLoginPassword `
     -serverName $serverName `
@@ -74,8 +75,8 @@ catch {
 try {
   Write-Information "INFO --- Create a web app." -InformationAction Continue
 
-  $primarySiteName = "$ApplicationName-public-$Environment-ne-appservice$suffix"
-  $secondarySiteName = "$ApplicationName-public-$Environment-we-appservice$suffix"
+  $primarySiteName = "$ApplicationName-public-tcni-$Environment-ne-appservice$suffix"
+  $secondarySiteName = "$ApplicationName-public-tcni--$Environment-we-appservice$suffix"
 
   $primarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
