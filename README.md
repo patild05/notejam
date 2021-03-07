@@ -82,3 +82,4 @@ Make sure that there are no firewall configured on Sql Server, for this configur
 be publickly accessible. Also, all Azure services should be able to reach to Sql server.
 2. The source code can be executed as a stand alone, execute the main.ps1 file to create infrastructure.
 The application code can be deployed from Visual Studio to the targer azure web app.
+Once the application is deployed, you need to register yourself on sign-in page, then you can sign in and use the application.
