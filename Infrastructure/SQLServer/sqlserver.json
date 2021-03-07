@@ -114,6 +114,19 @@
             },
             "resources": [
                 {
+                    "type": "firewallRules",
+                    "apiVersion": "2014-04-01-preview",
+                    "name": "AllowAllWindowsAzureIps",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[parameters('serverName')]"
+                    ],
+                    "properties": {
+                        "endIpAddress": "0.0.0.0",
+                        "startIpAddress": "0.0.0.0"
+                    }
+                },
+                {
                     "condition": "[equals(parameters('failoverGroup'), 'True')]",
                     "apiVersion": "2015-05-01-preview",
                     "type": "failoverGroups",
@@ -212,7 +225,21 @@
                 "administratorLoginPassword": "[parameters('serverAdminLoginPassword')]",
                 "version": "12.0"
             },
-            "resources": []
+            "resources": [
+                {
+                    "type": "firewallRules",
+                    "apiVersion": "2014-04-01-preview",
+                    "name": "AllowAllWindowsAzureIps",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [
+                        "[variables('partnerServerName')]"
+                    ],
+                    "properties": {
+                        "endIpAddress": "0.0.0.0",
+                        "startIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
         }
     ],
     "outputs": {

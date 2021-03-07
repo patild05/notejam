@@ -125,7 +125,8 @@ catch {
   throw
 }
 
-Start-Sleep -Seconds 120
+Write-Information -MessageData "INFO --- Finalizing the installation." -InformationAction Continue
+Start-Sleep -Seconds 60
 Write-Information -MessageData "INFO --- End script at $(Get-Date -Format 'dd-MM-yyyy HH:mm')." -InformationAction Continue
 
 
