@@ -76,7 +76,7 @@ try {
   Write-Information "INFO --- Create a web app." -InformationAction Continue
 
   $primarySiteName = "$ApplicationName-public-tcni-$Environment-ne-appservice$suffix"
-  $secondarySiteName = "$ApplicationName-public-tcni--$Environment-we-appservice$suffix"
+  $secondarySiteName = "$ApplicationName-public-tcni-$Environment-we-appservice$suffix"
 
   $primarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
