@@ -113,7 +113,7 @@
         },
         "operatingSystem": {
             "type": "string",
-            "defaultValue": "Linux",
+            "defaultValue": "Windows",
             "allowedValues": [
                 "Linux",
                 "Windows"

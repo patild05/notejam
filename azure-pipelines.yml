@@ -30,7 +30,7 @@ pool:
 # Jobs
 jobs:
   # Publish Artifacts
-  - job: artifacts
+  - job: publish_artifacts_infrastructure_code
     pool:
       vmImage: $(agent_vmimage)
     continueOnError: false
@@ -70,7 +70,7 @@ jobs:
         condition: succeededOrFailed()
 
   # Deploy
-  - job: deploy
+  - job: deploy_infrastructure_code
     dependsOn: artifacts
     pool:
       vmImage: $(agent_vmimage)
@@ -95,7 +95,7 @@ jobs:
 
     - task: AzurePowerShell@5
       displayName: 'Create Infrastructure'
-      enabled: false
+      enabled: true
       inputs:
         azureSubscription: ${{parameters.service_connection}}
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
@@ -103,14 +103,14 @@ jobs:
         azurePowerShellVersion: LatestVersion
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'Azure App Service Deploy: notejam'
+      displayName: 'Azure App Service Deploy: notejam primary'
       inputs:
         azureSubscription: ${{parameters.service_connection}}
         WebAppName: $(primary_site_name)
         packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'Azure App Service Deploy: notejam'
+      displayName: 'Azure App Service Deploy: notejam secondary'
       inputs:
         azureSubscription: ${{parameters.service_connection}}
         WebAppName: $(secondary_site_name)
