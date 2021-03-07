@@ -48,11 +48,11 @@ $suffix = "01"
 try {
   Write-Information "INFO --- Create a Azure Sql." -InformationAction Continue
   $serverName = ($ApplicationName + $locationAlias + $Environment + 'sql' + $suffix).ToLower()
-  $serverAdminLogin = $ServerName.Replace('-', '') + 'admin'
+  $serverAdminLogin = 'sqladmin'
 
   # Generate server admin login password and store in Key Vault
   Add-Type -Assembly System.Web
-  $serverAdminLoginPassword = [System.Web.Security.Membership]::GeneratePassword(20, 8)
+  $serverAdminLoginPassword = "Password@1234"
   $secureServerAdminLoginPassword = ConvertTo-SecureString -String $serverAdminLoginPassword -AsPlainText -Force
 
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `

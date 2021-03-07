@@ -6,8 +6,7 @@
     <div class="sixteen columns">
         <h3><span class="jam">notejam: </span><span>All notes(@Model.Item2.Count)</span></h3>
     </div>
-    <div class="three columns">
-        <a href="/PadViewModels/Create">New pad</a>        
+    <div class="three columns">        
         <h4 id="logo" style="margin-bottom: 1px;">My pads</h4>
         <hr style="margin: 10px 0 10px;" />
         <nav>
@@ -17,6 +16,8 @@
                     <li><a href="@Url.Action(item.Id.ToString(),"Home/Details/")">@item.Pad</a></li>
                 }
             </ul>
+            <hr style="margin: 10px 0 10px;" />
+            <a href="/PadViewModels/Create">New pad</a>
         </nav>
 
     </div>

@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - task: PublishPipelineArtifact@1
-        displayName: 'Publish Pipeline Artifact'
+        displayName: 'Publish Infra Artifact'
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
@@ -78,7 +78,7 @@ jobs:
           configuration: '$(build_configuration)'
 
       - task: PublishBuildArtifacts@1
-        displayName: 'Publish Artifact'
+        displayName: 'Publish Code Artifact'
         inputs:
           PathtoPublish: '$(build.artifactstagingdirectory)'
           ArtifactName: '$(code_artifact_name)'
@@ -86,7 +86,7 @@ jobs:
 
   # Deploy
   - job: deploy
-    dependsOn: artifacts    
+    dependsOn: artifacts
     pool:
       vmImage: $(agent_vmimage)
     continueOnError: false
@@ -97,19 +97,19 @@ jobs:
     - checkout: none
 
     - task: DownloadPipelineArtifact@2
-      displayName: 'Download Pipeline Artifact'
+      displayName: 'Download Infra Artifact'
       inputs:
         artifactName: $(artifact_name)
         targetPath: '$(Pipeline.Workspace)/$(artifact_path)'
-    
+
     - task: DownloadBuildArtifacts@0
-      displayName: 'Download code Artifact'
+      displayName: 'Download Code Artifact'
       inputs:
         artifactName: '$(code_artifact_name)'
-        downloadPath: '$(Pipeline.Workspace)/$(code_artifact_path)'        
+        downloadPath: '$(Pipeline.Workspace)/$(code_artifact_path)'
 
     - task: AzurePowerShell@5
-      displayName: 'Azure PowerShell script: FilePath'
+      displayName: 'Create Infrastructure'
       enabled: false
       inputs:
         azureSubscription: ${{parameters.service_connection}}
@@ -118,8 +118,8 @@ jobs:
         azurePowerShellVersion: LatestVersion
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'Azure App Service Deploy: notejamsinglepage'
+      displayName: 'Azure App Service Deploy: notejam'
       inputs:
         azureSubscription: ${{parameters.service_connection}}
-        WebAppName: notejamsinglepage20210307144600
+        WebAppName: notejamsinglepage20210307152700
         packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'

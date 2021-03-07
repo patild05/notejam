@@ -99,8 +99,9 @@
         },
         "linuxRuntimeStack": {
             "type": "string",
-            "defaultValue": "PYTHON|3.8",
+            "defaultValue": "",
             "allowedValues": [
+                "",
                 "PYTHON|3.8",
                 "node|10.10",
                 "php|7.2",
