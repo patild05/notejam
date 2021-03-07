@@ -95,7 +95,7 @@ jobs:
 
     - task: AzurePowerShell@5
       displayName: 'Create Infrastructure'
-      enabled: true
+      enabled: false
       inputs:
         azureSubscription: ${{parameters.service_connection}}
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
