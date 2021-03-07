@@ -125,5 +125,7 @@ catch {
   throw
 }
 
-
+Start-Sleep -Seconds 120
 Write-Information -MessageData "INFO --- End script at $(Get-Date -Format 'dd-MM-yyyy HH:mm')." -InformationAction Continue
+
+
