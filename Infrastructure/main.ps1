@@ -47,12 +47,13 @@ $suffix = "01"
 
 try {
   Write-Information "INFO --- Create a Azure Sql." -InformationAction Continue
-  $serverName = ($ApplicationName + $locationAlias + $Environment + 'sql' + $suffix).ToLower()
-  $serverAdminLogin = $ServerName.Replace('-', '') + 'admin'
+  $serverName = ($ApplicationName + 'jam' + $locationAlias + $Environment + 'sql2120121416prod').ToLower()
+  $databaseName = 'notejamproduction'
+  $serverAdminLogin = 'sqladmin'
 
   # Generate server admin login password and store in Key Vault
   Add-Type -Assembly System.Web
-  $serverAdminLoginPassword = [System.Web.Security.Membership]::GeneratePassword(20, 8)
+  $serverAdminLoginPassword = "Password@1234"
   $secureServerAdminLoginPassword = ConvertTo-SecureString -String $serverAdminLoginPassword -AsPlainText -Force
 
   $result = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
@@ -60,7 +61,7 @@ try {
     -Name ($ApplicationName + "_sql_" + (Get-Date).ToString("yyyyMMdd_HHmmss")) `
     -Mode Incremental `
     -TemplateFile (Join-Path -Path $PSScriptRoot -ChildPath "\SQLServer\sqlserver.json") `
-    -databaseName $ApplicationName `
+    -databaseName $databaseName `
     -serverAdminLogin $serverAdminLogin `
     -serverAdminLoginPassword $secureServerAdminLoginPassword `
     -serverName $serverName `
@@ -74,8 +75,8 @@ catch {
 try {
   Write-Information "INFO --- Create a web app." -InformationAction Continue
 
-  $primarySiteName = "$ApplicationName-public-$Environment-ne-appservice$suffix"
-  $secondarySiteName = "$ApplicationName-public-$Environment-we-appservice$suffix"
+  $primarySiteName = "$ApplicationName-public-tcni-$Environment-ne-appservice$suffix"
+  $secondarySiteName = "$ApplicationName-public-tcni-$Environment-we-appservice$suffix"
 
   $primarySite = New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName `
     -ErrorAction 'Stop' `
@@ -124,5 +125,8 @@ catch {
   throw
 }
 
-
+Write-Information -MessageData "INFO --- Finalizing the installation." -InformationAction Continue
+Start-Sleep -Seconds 60
 Write-Information -MessageData "INFO --- End script at $(Get-Date -Format 'dd-MM-yyyy HH:mm')." -InformationAction Continue
+
+

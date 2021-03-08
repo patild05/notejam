@@ -1,28 +1,5 @@
 name: $(TeamProject)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
 parameters:
-  - name: appName
-    type: string
-    displayName: "Name of application"
-    default: "note01"
-
-  - name: environment
-    type: string
-    displayName: "Select Environment"
-    default: 'd'
-    values:
-      - 'd'
-      - 't'
-      - 'a'
-      - 'p'
-
-  - name: location
-    type: string
-    displayName: "Select Location"
-    default: 'northeurope'
-    values:
-      - 'northeurope'
-      - 'westeurope'
-
   - name: service_connection
     type: string
     displayName: "Enter the service connection name, it has to be pre-configured in your Azure DevOps environment."
@@ -31,9 +8,21 @@ parameters:
 trigger: none
 
 variables:
+  appName: "note01"
+  environment: "d"
+  location: "northeurope"
+
   agent_vmimage: "windows-latest"
+
   artifact_path: "Infrastructure"
   artifact_name: "Infrastructure"
+  build_platform: "any cpu"
+  build_configuration: "release"
+  code_artifact_name: "notejamdrop"
+  code_artifact_path: "notejamdrop"
+
+  primary_site_name: "$(appName)-public-tcni-$(environment)-ne-appservice01"
+  secondary_site_name: "$(appName)-public-tcni-$(environment)-we-appservice01"
 
 pool:
   vmImage: $(agent_vmimage)
@@ -41,7 +30,7 @@ pool:
 # Jobs
 jobs:
   # Publish Artifacts
-  - job: artifacts
+  - job: publish_artifacts_infrastructure_code
     pool:
       vmImage: $(agent_vmimage)
     continueOnError: false
@@ -50,14 +39,39 @@ jobs:
 
     steps:
       - task: PublishPipelineArtifact@1
-        displayName: 'Publish Pipeline Artifact'
+        displayName: 'Publish Infra Artifact'
         inputs:
           targetPath: $(artifact_path)
           artifact: $(artifact_name)
 
+      - task: NuGetToolInstaller@0
+        displayName: 'Use NuGet 4.4.1'
+        inputs:
+          versionSpec: 4.4.1
+
+      - task: NuGetCommand@2
+        displayName: 'NuGet restore'
+        inputs:
+          restoreSolution: '**\*.sln'
+
+      - task: VSBuild@1
+        displayName: 'Build solution'
+        inputs:
+          solution: '**\*.sln'
+          msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
+          platform: '$(build_platform)'
+          configuration: '$(build_configuration)'
+
+      - task: PublishBuildArtifacts@1
+        displayName: 'Publish Code Artifact'
+        inputs:
+          PathtoPublish: '$(build.artifactstagingdirectory)'
+          ArtifactName: '$(code_artifact_name)'
+        condition: succeededOrFailed()
+
   # Deploy
-  - job: deploy
-    dependsOn: artifacts
+  - job: deploy_infrastructure_code
+    dependsOn: publish_artifacts_infrastructure_code
     pool:
       vmImage: $(agent_vmimage)
     continueOnError: false
@@ -68,16 +82,36 @@ jobs:
     - checkout: none
 
     - task: DownloadPipelineArtifact@2
-      displayName: 'Download Pipeline Artifact'
+      displayName: 'Download Infra Artifact'
       inputs:
         artifactName: $(artifact_name)
         targetPath: '$(Pipeline.Workspace)/$(artifact_path)'
 
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Code Artifact'
+      inputs:
+        artifactName: '$(code_artifact_name)'
+        downloadPath: '$(Pipeline.Workspace)/$(code_artifact_path)'
+
     - task: AzurePowerShell@5
-      displayName: 'Azure PowerShell script: FilePath'
+      displayName: 'Create Infrastructure'
       enabled: true
       inputs:
         azureSubscription: ${{parameters.service_connection}}
         ScriptPath: '$(Pipeline.Workspace)/$(artifact_name)/main.ps1'
-        ScriptArguments: '-ApplicationName ${{parameters.appName}} -Environment ${{parameters.environment}} -Location ${{parameters.location}}'
+        ScriptArguments: '-ApplicationName $(appName) -Environment $(environment) -Location $(location)'
         azurePowerShellVersion: LatestVersion
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Azure App Service Deploy: notejam primary'
+      inputs:
+        azureSubscription: ${{parameters.service_connection}}
+        WebAppName: $(primary_site_name)
+        packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Azure App Service Deploy: notejam secondary'
+      inputs:
+        azureSubscription: ${{parameters.service_connection}}
+        WebAppName: $(secondary_site_name)
+        packageForLinux: '$(Pipeline.Workspace)/**/notejamsinglepage.zip'

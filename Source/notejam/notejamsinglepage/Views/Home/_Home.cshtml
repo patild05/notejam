@@ -1,0 +1,56 @@
+﻿<!-- ko with: home -->
+@*@model IEnumerable<notejamsinglepage.Models.PadViewModel>*@
+@model Tuple<List<notejamsinglepage.Models.PadViewModel>, List<notejamsinglepage.Models.CompositeModel>>
+
+<div class="container">
+    <div class="sixteen columns">
+        <h3><span class="jam">notejam: </span><span>All notes(@Model.Item2.Count)</span></h3>
+    </div>
+    <div class="three columns">        
+        <h4 id="logo" style="margin-bottom: 1px;">My pads</h4>
+        <hr style="margin: 10px 0 10px;" />
+        <nav>
+            <ul>
+                @foreach (var item in Model.Item1)
+                {
+                    <li><a href="@Url.Action(item.Id.ToString(),"Home/Details/")">@item.Pad</a></li>
+                }
+            </ul>
+            <hr style="margin: 10px 0 10px;" />
+            <a href="/PadViewModels/Create">New pad</a>
+        </nav>
+
+    </div>
+    <div class="thirteen columns content-area">
+        <!--<div class="alert-area">-->
+        <!--<div class="alert alert-success">Note is sucessfully saved</div>-->
+        <!--</div>-->
+        <table class="notes">
+            <tr>
+                <th class="note">Note <a href="#" class="sort_arrow">&uarr;</a><a href="#">&darr;</a></th>
+                <th>Pad</th>
+                <th class="date">Last modified <a href="#" class="sort_arrow">&uarr;</a><a href="#">&darr;</a></th>
+            </tr>
+
+            @foreach (var item in Model.Item2)
+            {
+                <tr>
+                    <td>
+                        <a href="@Url.Action(item.NoteId.ToString(),"NoteViewModels/Details/")">@item.Title</a>
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PadName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Created)
+                    </td>
+                </tr>
+            }
+
+
+        </table>
+        <a href="/NoteViewModels/Create" class="button">New note</a>
+    </div>
+
+</div><!-- container -->
+<!-- /ko -->
